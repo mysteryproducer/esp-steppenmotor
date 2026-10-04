@@ -20,13 +20,13 @@
     }
   },
   "idf.openOcdConfigs": [
-    "board/esp32c3-builtin.cfg"
+    "board/esp32s3-builtin.cfg"
   ],
   "idf.port": "detect",
-  "idf.currentSetup": "/Users/mysteryproducer/.espressif/v6.0.1/esp-idf",
+  "idf.currentSetup": "/Users/mysteryproducer/.espressif/v6.1/esp-idf",
   "idf.customExtraVars": {
-    "IDF_TARGET": "esp32c3"
-  },
+    "IDF_TARGET": "esp32s3"
+},
   "clangd.path": "/Users/mysteryproducer/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
   "clangd.arguments": [
     "--background-index",
