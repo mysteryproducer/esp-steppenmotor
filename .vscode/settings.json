@@ -21,16 +21,18 @@
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
-  ],
-  "idf.port": "detect",
+],
+  "idf.port": "/dev/tty.usbmodem21201",
   "idf.currentSetup": "/Users/mysteryproducer/.espressif/v6.1/esp-idf",
   "idf.customExtraVars": {
-    "IDF_TARGET": "esp32s3"
+    "IDF_TARGET": "esp32s3",
+    "OPENOCD_USB_ADAPTER_LOCATION": "2-1.2"
 },
-  "clangd.path": "/Users/mysteryproducer/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
+  "clangd.path": "/Users/mysteryproducer/.espressif/tools/esp-clangd/esp-21.1.3_20260408/esp-clangd/bin/clangd",
   "clangd.arguments": [
     "--background-index",
     "--query-driver=**",
     "--compile-commands-dir=/Users/mysteryproducer/Documents/dev/iot/esp-steppenmotor/build"
-  ]
+],
+"idf.flashType": "UART"
 }

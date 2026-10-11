@@ -18,9 +18,11 @@ public:
     ShiftRegisterOutputs() : staged_((config::MOTOR_COUNT + 1) / 2), buffer_(staged_.size()) {
         // Stay disabled until the registers hold a known state.
         if (config::SR_ENABLE_PIN != config::NO_PIN) {
-            platform::configure_output(config::SR_ENABLE_PIN, true);
+            configurePin(platform::GpioPinConfig{.pin = config::SR_ENABLE_PIN, .mode = platform::GpioPinMode::Output, .pullup = false, .level = false});
+            //platform::configure_output(config::SR_ENABLE_PIN, true);
         }
-        platform::configure_output(config::SR_LATCH_PIN, false);
+        configurePin(platform::GpioPinConfig{.pin = config::SR_LATCH_PIN, .mode = platform::GpioPinMode::Output, .pullup = false, .level = false});
+        //platform::configure_output(config::SR_LATCH_PIN, false);
         platform::spi_begin(config::SR_DATA_PIN, config::SR_CLOCK_PIN, buffer_.size());
         flush();
     }
@@ -55,7 +57,8 @@ public:
     DirectGpioOutputs() : staged_(config::MOTOR_COUNT, 0), written_(config::MOTOR_COUNT, 0) {
         for (int motor = 0; motor < config::MOTOR_COUNT; ++motor) {
             for (int pin : config::DIRECT_GPIO_PINS[motor]) {
-                platform::configure_output(pin, false);
+//                platform::configure_output(pin, false);
+                configurePin(platform::GpioPinConfig{.pin = pin, .mode = platform::GpioPinMode::Output, .pullup = false, .level = false});
             }
         }
     }

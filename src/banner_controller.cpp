@@ -1,4 +1,4 @@
-#include "banner_controller.hpp"
+#include "banners.hpp"
 
 #include <array>
 #include <cinttypes>
@@ -70,7 +70,8 @@ BannerController::BannerController(Motion& motion, const Settings& settings) : m
         const config::Set& cfg = config::SETS[index];
         sets_.push_back({.cfg = &cfg, .index = index});
         if (cfg.home_mode == config::HomeMode::Sensor) {
-            platform::configure_input_pullup(cfg.home_pin);
+//            platform::configure_input_pullup(cfg.home_pin);
+            configurePin(platform::GpioPinConfig{.pin = cfg.home_pin, .mode = platform::GpioPinMode::Input, .pullup = true, .level = false});
         }
     }
 }

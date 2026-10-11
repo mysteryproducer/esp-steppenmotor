@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 
-#include "banner_controller.hpp"
+#include "banners.hpp"
 #include "coil_outputs.hpp"
 #include "config.hpp"
 #include "console.hpp"

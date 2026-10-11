@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "banner_controller.hpp"
+#include "banners.hpp"
 #include "motion.hpp"
 #include "settings.hpp"
 

@@ -1,6 +1,7 @@
 // ESP-IDF implementation of platform.hpp, plus the app_main entry point.
 
 #include "platform.hpp"
+#include "banners.hpp"
 
 #include <algorithm>
 #include <cstdarg>
@@ -98,26 +99,30 @@ void busy_wait_us(uint32_t us) {
     esp_rom_delay_us(us);
 }
 
-void configure_output(int pin, bool level) {
-    gpio_set_level(to_gpio(pin), level);  // preset, so enabling the output doesn't glitch
+void configurePin(const GpioPinConfig& config) {
+    gpio_set_level(to_gpio(config.pin), config.level?1:0);  // preset, so enabling the output doesn't glitch
     gpio_config_t io = {};
-    io.pin_bit_mask = 1ULL << pin;
-    io.mode = GPIO_MODE_OUTPUT;
+    io.pin_bit_mask = 1ULL << config.pin;
+    switch (config.mode) {
+        case GpioPinMode::Input:
+            io.mode = GPIO_MODE_INPUT;
+            break;
+        case GpioPinMode::Output:
+            io.mode = GPIO_MODE_OUTPUT;
+            ESP_ERROR_CHECK(gpio_sleep_sel_dis(to_gpio(config.pin)));
+            break;
+        case GpioPinMode::InOut:
+            io.mode = GPIO_MODE_INPUT_OUTPUT;
+            ESP_ERROR_CHECK(gpio_sleep_sel_dis(to_gpio(config.pin)));
+            break;
+    }
+    io.pull_up_en = config.pullup ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE;
+    
     ESP_ERROR_CHECK(gpio_config(&io));
-    // By default the C3/S3 isolate every GPIO during light sleep; keep driving this one.
-    ESP_ERROR_CHECK(gpio_sleep_sel_dis(to_gpio(pin)));
 }
 
 void write_output(int pin, bool level) {
     gpio_set_level(to_gpio(pin), level);
-}
-
-void configure_input_pullup(int pin) {
-    gpio_config_t io = {};
-    io.pin_bit_mask = 1ULL << pin;
-    io.mode = GPIO_MODE_INPUT;
-    io.pull_up_en = GPIO_PULLUP_ENABLE;
-    ESP_ERROR_CHECK(gpio_config(&io));
 }
 
 int read_input(int pin) {
@@ -249,5 +254,24 @@ void low_power_sleep(uint32_t seconds) {
 
 extern "C" void app_main(void) {
     // A task of our own, so its stack size is set here rather than in sdkconfig.
-    xTaskCreate([](void*) { run_banners(); }, "banners", 8192, nullptr, 5, nullptr);
+//    xTaskCreate([](void*) { run_banners(); }, "banners", 8192, nullptr, 5, nullptr);
+    platform::GpioPinConfig config = { .pin = 8, .mode = platform::GpioPinMode::Output, .pullup = false, .level = false };
+    configurePin(config);
+    config.pin = 9;
+    configurePin(config);
+    config.pin = 10;
+    configurePin(config);
+    config.pin = 11;
+    configurePin(config);
+
+    uint8_t index=0;
+    while(true) {
+        ++index;
+        uint8_t pattern = GpioPulseDriven::HALF_STEP[7-(index % 8)];
+        for (int i = 0; i < 4; ++i) {
+            platform::write_output(8 + i, (pattern >> i) & 1);
+        }
+        platform::busy_wait_us(1000);
+    }
+
 }
