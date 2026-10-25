@@ -9,37 +9,9 @@
 
 #include "platform.hpp"
 
-namespace {
+namespace banners {
 
-const char* const TAG = "banners";
-
-constexpr bool motors_are_unique() {
-    std::array<bool, 128> used{};
-    for (const config::Set& set : config::SETS) {
-        for (const config::Banner& banner : set.banners) {
-            if (banner.motor < 0 || banner.motor >= static_cast<int>(used.size()) || used[banner.motor]) {
-                return false;
-            }
-            used[banner.motor] = true;
-        }
-    }
-    return true;
-}
-static_assert(motors_are_unique(), "every banner needs its own motor, numbered 0-127");
-
-constexpr bool home_inputs_are_unique() {
-    const auto& sets = config::SETS;
-    for (size_t i = 0; i < std::size(sets); ++i) {
-        for (size_t j = i + 1; j < std::size(sets); ++j) {
-            if (sets[i].home_mode == config::HomeMode::Sensor && sets[j].home_mode == config::HomeMode::Sensor &&
-                sets[i].home_pin == sets[j].home_pin) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-static_assert(home_inputs_are_unique(), "sets home at the same time, so each needs its own sensor input");
+const char* const TAG = "banner controller";
 
 // Uniform in [0, bound), without modulo bias.
 uint32_t random_below(uint32_t bound) {
@@ -208,28 +180,6 @@ void BannerController::home_with_sensors(bool force, int only_set) {
             LOG_INFO(TAG, "set %s: homed", h.set->cfg->name);
         }
     }
-}
-
-// A banner left on the sensor (e.g. power was lost mid-homing) would hide every other banner's trigger,
-// so step banners away from home one at a time until the sensor releases.
-bool BannerController::clear_sensor(const SetState& set) {
-    if (!sensor_active(set)) {
-        return true;
-    }
-    LOG_WARN(TAG, "set %s: home sensor already active, stepping banners off it", set.cfg->name);
-    for (const config::Banner& banner : set.cfg->banners) {
-        Move move = {
-            .motor = banner.motor,
-            .target = motion_.position(banner.motor) + static_cast<int32_t>(settings_.home_clear_steps),
-            .step_interval_us = settings_.home_step_interval_us,
-        };
-        motion_.run(std::span(&move, 1));
-        if (!sensor_active(set)) {
-            return true;
-        }
-    }
-    LOG_ERROR(TAG, "set %s: home sensor stuck active; check its wiring", set.cfg->name);
-    return false;
 }
 
 bool BannerController::sensor_active(const SetState& set) const {
