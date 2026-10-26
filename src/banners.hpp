@@ -4,7 +4,6 @@
 #include <vector>
 #include <math.h>
 
-#include "settings.hpp"
 #include "JVal.h"
 
 namespace banners {
@@ -14,7 +13,7 @@ class BannerSet;
 // Moves each set of banners into a random order, homing them first when their positions are unknown.
 class BannerController {
 public:
-    BannerController(const Settings& settings);
+    BannerController(const JVal& settings);
 
     // Homes every set whose positions are unknown, or every set if `force` is true. A non-negative
     // `only_set` limits this to that set.
@@ -41,7 +40,7 @@ class Motor {
         static constexpr uint8_t HALF_STEPS[8] = {0b0001, 0b0011, 0b0010, 0b0110, 0b0100, 0b1100, 0b1000, 0b1001};
         static const int SHEAVE_DIAMETER_MM = 26;
         static constexpr float HALF_STEPS_PER_REV = 4075.7728; // 64 half-steps per motor revolution x the 63.684:1 gearbox (it is not exactly the advertised 64:1).
-        static const float MAX_SPEED = .0001; // half-steps per microsecond
+        static constexpr float MAX_SPEED = .0001; // half-steps per microsecond
         static const long ACCELERATION_TIME = 1000000; // microseconds
         static constexpr float ACCELERATION = static_cast<float>(MAX_SPEED) / ACCELERATION_TIME; // half-steps per microsecond^2
 
@@ -49,7 +48,7 @@ class Motor {
             : diameter_mm(diameter), reversed(reversed), home_offset(home_offset) {
                 steps_per_mm = 1.0 / (HALF_STEPS_PER_REV / (std::numbers::pi * diameter_mm));
             }
-        Motor(JVal *json);
+        Motor(JVal *settings);
         void move(int position_mm);
         void release();
         // Returns the motor phase at the given time.
@@ -68,12 +67,12 @@ class Motor {
         float diameter_mm;
         float steps_per_mm; // half-steps per millimeter
         bool reversed;
-        int home_offset;    // in half-steps
+        int32_t home_offset;    // in half-steps
         
-        int start_position;  // in half-steps, relative to home
-        long start_time;
-        int target_position; // in half-steps
-        uint32_t travel_time_us; // time to travel from start_position to target_position
+        int32_t start_position;  // in half-steps, relative to home
+        int32_t start_time;
+        int32_t target_position; // in half-steps
+        int32_t travel_time_us; // time to travel from start_position to target_position
 
         void write_pins();
 };

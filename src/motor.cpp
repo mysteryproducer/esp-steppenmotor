@@ -1,5 +1,7 @@
 #include "banners.hpp"
+#include "platform.hpp"
 #include "JVal.h"
+#include <cmath>
 
 namespace banners {
 
@@ -11,11 +13,11 @@ namespace banners {
         reversed = (json_reversed==NULL || err.isError())?false:json_reversed->getBoolean(&err);
         steps_per_mm = 1.0 / (HALF_STEPS_PER_REV / (std::numbers::pi * diameter_mm));
 
-        JVal *pins_array = JVal_get(json, &err, "pins");
-        if (pins_array != NULL && !err.isError() && pins_array->getType() == JVType::Array) {
+        JVal *pins_array = JVal_get(&json, &err, "pins");
+        if (pins_array != NULL && !err.isError() && pins_array->getType() == JVType::JVType_Array) {
             for (int i = 0; i < 4; ++i) {
                 JVal *pin_val = JVal_get(pins_array, &err, "A", i);
-                if (pin_val != NULL && !err.isError() && pin_val->getType() == JVType::Int) {
+                if (pin_val != NULL && !err.isError() && pin_val->getType() == JVType::JVType_Int) {
                     pins[i] = static_cast<uint8_t>(pin_val->getInt(&err));
                 }
             }
@@ -68,7 +70,16 @@ namespace banners {
     }
 
     uint8_t Motor::next(long time_us) {
-
+        //todo: this is AI code. Fix it.
+        position = getAbsolutePosition(time_us);
+        long distance = target_position - position;
+        if (distance == 0) {
+            return phase;
+        }
+        int step_direction = (distance > 0) ? 1 : -1;
+        phase = (phase + step_direction + PHASES) % PHASES;
+        write_pins();
+        return phase;
     }
 
     int Motor::getAbsolutePosition(long time_us) {
