@@ -32,9 +32,15 @@ private:
     std::vector<BannerSet> sets;
     int banner_spacing_mm = 20;
 };
+ 
+class SignalDestination {
+    public:
+        virtual void sendNextSignal(long time_us) = 0;
+        virtual void configurePins() = 0;
+        virtual ~SignalDestination() = default;
+};
 
-
-class Motor {
+class Motor : SignalDestination {
     public:
         static const uint8_t PHASES = 8;
         static constexpr uint8_t HALF_STEPS[8] = {0b0001, 0b0011, 0b0010, 0b0110, 0b0100, 0b1100, 0b1000, 0b1001};
@@ -51,14 +57,13 @@ class Motor {
         Motor(JVal *settings);
         void move(int position_mm);
         void release();
-        // Returns the motor phase at the given time.
-        uint8_t next(long time_us);
+        void sendNextSignal(long time_us) override;
+        void configurePins() override;
         long time_to_next(long time_us);
 
     protected:
         uint8_t phase = 0;  // index into the half-step sequence, kept while released
         long position = -1; // in half-steps, relative to home
-        void configurePins();
         int getAbsolutePosition(long time_us);
 
     private:
@@ -77,14 +82,22 @@ class Motor {
         void write_pins();
 };
 
-class MultiplexedMotor : Motor {
+class Multiplexer : SignalDestination {
     //represents a motor connected to a 74HC595 shift register that can control 2 motors. All 745s are chained together on the same SPI bus.
     public:
-        MultiplexedMotor(int csPin, bool highPins=false) : csPin(csPin), shiftLeft(highPins?4:0) {}
+        Multiplexer(int csPin, bool highPins=false) : csPin(csPin), shiftLeft(highPins?4:0) {}
+        Multiplexer(JVal *settings);
+        void sendNextSignal(long time_us) override;
+        void configurePins() override;
+        std::vector<Motor*> getMotors();
 
     private:
         int csPin;
-        uint8_t shiftLeft = 0;
+        int sdaPin;
+        int sckPin;
+        
+        std::vector<Motor*> motors;
+        
 };
 
 class Banner {

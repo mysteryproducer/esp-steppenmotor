@@ -13,7 +13,7 @@ namespace banners {
         reversed = (json_reversed==NULL || err.isError())?false:json_reversed->getBoolean(&err);
         steps_per_mm = 1.0 / (HALF_STEPS_PER_REV / (std::numbers::pi * diameter_mm));
 
-        JVal *pins_array = JVal_get(&json, &err, "pins");
+        JVal *pins_array = JVal_get(json, &err, "pins");
         if (pins_array != NULL && !err.isError() && pins_array->getType() == JVType::JVType_Array) {
             for (int i = 0; i < 4; ++i) {
                 JVal *pin_val = JVal_get(pins_array, &err, "A", i);
